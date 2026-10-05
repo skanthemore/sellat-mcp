@@ -18,10 +18,26 @@ size shown on the certificate). It is a thin layer over the
 
 ## Setup
 
-1. Create a free account at [sellat.app](https://sellat.app) and an API key
-   in your dashboard ([API keys](https://sellat.app/dashboard#api-keys)).
-   Hashing and verifying work without a key.
-2. Add the server to your client.
+### Claude Desktop: one click
+
+1. Download **`sellat.mcpb`** from the [latest release](https://github.com/skanthemore/sellat-mcp/releases/latest)
+   and open it. Claude Desktop shows an install dialog; it brings its own
+   Node.js, so there is nothing else to install.
+2. Paste your API key when it asks: create a free account at
+   [sellat.app](https://sellat.app), then a key in your dashboard
+   ([API keys](https://sellat.app/dashboard#api-keys)). Without a key you can
+   still find, fingerprint and verify files.
+
+Then just talk: *"protect the contract I downloaded yesterday"*. Claude finds
+the file in your Downloads, Desktop, Documents or Pictures folder (whatever
+they are called on your system) and asks you which one if several fit.
+
+A file you drag into the chat goes to the model, not to this server: say
+where it is saved instead, or let Claude find it.
+
+### Other clients
+
+You need Node.js 18 or later, and the API key as above.
 
 **Claude Code**
 
@@ -35,8 +51,8 @@ claude mcp add sellat -e SELLAT_API_TOKEN=sellat_… -- npx -y sellat-mcp
 gemini mcp add -e SELLAT_API_TOKEN=sellat_… sellat npx -y sellat-mcp
 ```
 
-**Claude Desktop, Cursor and other clients** (`claude_desktop_config.json`,
-`.cursor/mcp.json`, …):
+**Cursor, Claude Desktop without the extension, and other clients**
+(`.cursor/mcp.json`, `claude_desktop_config.json`, …):
 
 ```json
 {
@@ -50,18 +66,17 @@ gemini mcp add -e SELLAT_API_TOKEN=sellat_… sellat npx -y sellat-mcp
 }
 ```
 
-Requires Node.js 18 or later.
-
 | Variable | Default | |
 | --- | --- | --- |
 | `SELLAT_API_TOKEN` | — | your API key (`SELLAT_API_KEY` is accepted too) |
-| `SELLAT_DOWNLOAD_DIR` | `~/Downloads`, else home | where certificates and packages are saved |
+| `SELLAT_DOWNLOAD_DIR` | the system's downloads folder | where certificates and packages are saved |
 | `SELLAT_API_URL` | `https://sellat.app` | another SELLAT environment |
 
 ## Tools
 
 | Tool | What it does | Key | Network |
 | --- | --- | --- | --- |
+| `sellat_find` | find a file by name in Downloads, Desktop, Documents and Pictures (localized names included); names only, never contents | no | none |
 | `sellat_hash` | SHA-256 of a local file | no | none |
 | `sellat_stamp` | protect a file: hash locally, create the proof; `qualified: true` adds the FNMT seal | yes | SELLAT (hash only) |
 | `sellat_status` | state of a proof: Polygon anchor, Bitcoin, seal, URLs | yes | SELLAT |
@@ -104,6 +119,11 @@ does, e.g. `openssl ts -verify`).
 ```bash
 npm install
 node --test
+npm run bundle   # dist/sellat.mcpb, the Claude Desktop extension
 ```
+
+Release: bump `version` in `package.json`, `manifest.json` and `VERSION` in
+`src/server.mjs`; `npm publish`; `npm run bundle` and attach
+`dist/sellat.mcpb` to a GitHub release.
 
 MIT licence.

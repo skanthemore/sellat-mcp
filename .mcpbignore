@@ -1,0 +1,7 @@
+/test/
+/.github/
+/dist/
+*.tgz
+*.mcpb
+/.gitignore
+/.mcpbignore

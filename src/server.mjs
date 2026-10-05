@@ -5,15 +5,17 @@ import { z } from 'zod';
 import { SellatApiError, createClient } from 'sellat-cli';
 import { checkAnchorOnChain, verifyProofOffline } from 'sellat-verify';
 import { cleanName, defaultDownloadDir, expandPath, freePath, mimeTypeFor, requireFile, sha256File } from './files.mjs';
+import { findFiles, userFolders } from './find.mjs';
 import { proofJsonFromZip } from './zip.mjs';
 
-export const VERSION = '0.1.0';
+export const VERSION = '0.2.0';
 
 const KEYS_URL = 'https://sellat.app/dashboard#api-keys';
 
 const INSTRUCTIONS = `SELLAT creates independently verifiable proof that an exact file existed at a given time.
 
 - Files are hashed on this machine. Only the SHA-256 goes to SELLAT; the file itself never leaves the computer.
+- The tools work on files saved on this computer. When the user names a file without a path ("the contract I downloaded yesterday"), call sellat_find first; if more than one file fits, ask which one. A file attached to the chat is not visible to these tools: ask where it is saved, or find it with sellat_find.
 - A new proof is anchored on Polygon in a Merkle batch: within minutes on the Pro account, at the end of a fixed four-hour UTC slot on the free account (the proof's "anchoring" field says which). Bitcoin (OpenTimestamps) confirms hours later. Do not promise an on-chain transaction in seconds; use sellat_status to follow it.
 - The qualified seal (FNMT-RCM, eIDAS, RFC 3161) is immediate, but it spends one seal from the account. Only request it when the user has explicitly asked for it in this conversation.
 - Payments never happen here. When the account has no seals left the tools answer with a link to buy them on the web; give the user that link and wait for them to say they bought before trying again.
@@ -83,17 +85,31 @@ function proofSummary(proof, lead) {
 }
 
 /**
+ * Empty values and placeholders a host left unexpanded (an optional field of
+ * a Claude Desktop extension the user skipped arrives as "${user_config.x}")
+ * count as not set.
+ */
+export function configuredEnv(env) {
+  const out = {};
+  for (const [key, value] of Object.entries(env)) {
+    if (typeof value === 'string' && value.trim() !== '' && !value.startsWith('${')) out[key] = value;
+  }
+  return out;
+}
+
+/**
  * The SELLAT MCP server. `env` and `fetchImpl` are injectable so tests run
  * against a fake API; the binary passes the real ones.
  */
-export function createSellatServer({ env = process.env, fetchImpl = fetch } = {}) {
+export function createSellatServer({ env: rawEnv = process.env, fetchImpl = fetch } = {}) {
+  const env = configuredEnv(rawEnv);
   const baseUrl = (env.SELLAT_API_URL ?? 'https://sellat.app').replace(/\/+$/, '');
   const token = env.SELLAT_API_TOKEN ?? env.SELLAT_API_KEY;
 
   function client() {
     if (!token) {
       throw new Error(
-        `No SELLAT API key configured. Create one at ${KEYS_URL} (free account) and set SELLAT_API_TOKEN in the MCP client's configuration for sellat-mcp. Hashing and verifying work without a key.`
+        `No SELLAT API key configured. Create one at ${KEYS_URL} (free account), then paste it in the extension's settings (Claude Desktop: Settings → Extensions → Sellat) or set SELLAT_API_TOKEN in the MCP client's configuration. Finding, hashing and verifying files work without a key.`
       );
     }
     return createClient({ token, baseUrl, fetchImpl });
@@ -125,6 +141,43 @@ export function createSellatServer({ env = process.env, fetchImpl = fetch } = {}
       const file = requireFile(path);
       const sha256 = await sha256File(file.path);
       return ok(`SHA-256 of ${file.name}: ${sha256}`, { path: file.path, sha256, size_bytes: file.size });
+    })
+  );
+
+  server.registerTool(
+    'sellat_find',
+    {
+      title: 'Find a file',
+      description:
+        "Find files on this computer by name, in the user's Downloads, Desktop, Documents and Pictures folders (their real names on this system), newest first. Reads names only, never contents. Use it whenever the user refers to a file without giving its path. With no query it lists the most recent files.",
+      inputSchema: {
+        query: z.string().optional().describe('Words from the file name, any order, case and accents ignored ("contrato alquiler", "pdf").'),
+        where: z
+          .enum(['all', 'downloads', 'desktop', 'documents', 'pictures'])
+          .optional()
+          .describe('Which folder to search. Default all four.'),
+        folder: z.string().optional().describe('Search this folder instead (absolute path, ~ expanded).'),
+        modified_within_days: z.number().positive().optional().describe('Only files changed in the last N days ("yesterday" = 2).'),
+      },
+      annotations: { readOnlyHint: true, openWorldHint: false },
+    },
+    guarded(async ({ query = '', where = 'all', folder, modified_within_days }) => {
+      const folders = userFolders();
+      const roots = folder
+        ? [expandPath(folder)]
+        : where === 'all'
+          ? Object.values(folders).flat()
+          : (folders[where] ?? []);
+      if (!roots.length) {
+        return fail(`No ${where} folder on this computer. Pass folder with an absolute path.`);
+      }
+      const result = await findFiles({ query, roots, modifiedWithinDays: modified_within_days });
+      if (!result.files.length) {
+        return ok(`No file matching "${query}" in ${roots.join(', ')}${result.truncated ? ' (search stopped early: the folders are large; narrow it with where or folder)' : ''}.`);
+      }
+      const lines = result.files.map((f) => `- ${f.path}  (${f.size_bytes} bytes, modified ${f.modified})`);
+      const more = result.total > result.files.length ? `\n…and ${result.total - result.files.length} more; refine the query.` : '';
+      return ok(`${lines.join('\n')}${more}`, result);
     })
   );
 

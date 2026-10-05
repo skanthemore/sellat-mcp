@@ -2,6 +2,7 @@ import { createHash } from 'node:crypto';
 import { createReadStream, existsSync, statSync } from 'node:fs';
 import { homedir } from 'node:os';
 import { basename, extname, isAbsolute, join, resolve } from 'node:path';
+import { userFolders } from './find.mjs';
 
 /**
  * Everything that touches the user's disk. Files are read only to hash them;
@@ -79,11 +80,10 @@ export function mimeTypeFor(filePath) {
   return MIME_BY_EXT[extname(filePath).toLowerCase()] ?? 'application/octet-stream';
 }
 
-/** Where downloads go: SELLAT_DOWNLOAD_DIR, else ~/Downloads, else home. */
+/** Where downloads go: SELLAT_DOWNLOAD_DIR, else the system's downloads folder (~/Descargas on a Spanish Linux), else home. */
 export function defaultDownloadDir(env = process.env) {
   if (env.SELLAT_DOWNLOAD_DIR) return expandPath(env.SELLAT_DOWNLOAD_DIR);
-  const downloads = join(homedir(), 'Downloads');
-  return existsSync(downloads) ? downloads : homedir();
+  return userFolders().downloads?.[0] ?? homedir();
 }
 
 /** `name.pdf`, or `name (2).pdf` when that one is taken: a download never overwrites. */
