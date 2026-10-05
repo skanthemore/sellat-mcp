@@ -59,12 +59,12 @@ const PROOF = {
   urls: { certificate: 'https://sellat.test/certificate/abc' },
 };
 
-test('lists the eight tools, with instructions about payments', async () => {
+test('lists the nine tools, with instructions about payments', async () => {
   const { client } = await connect();
   const { tools } = await client.listTools();
   assert.deepEqual(
     tools.map((t) => t.name).sort(),
-    ['sellat_account', 'sellat_download', 'sellat_hash', 'sellat_list', 'sellat_seal', 'sellat_stamp', 'sellat_status', 'sellat_verify']
+    ['sellat_account', 'sellat_download', 'sellat_find', 'sellat_hash', 'sellat_list', 'sellat_seal', 'sellat_stamp', 'sellat_status', 'sellat_verify']
   );
   assert.match(client.getInstructions(), /Payments never happen here/);
 });
@@ -218,4 +218,21 @@ test('sellat_verify: by proof id, before the batch is anchored', async () => {
   });
   const result = await call('sellat_verify', { file_path: EXAMPLE_FILE, proof_id: 'p-1' });
   assert.match(result.text, /not anchored yet/);
+});
+
+test('sellat_find returns paths the other tools can use, without a key', async () => {
+  const dir = await mkdtemp(join(tmpdir(), 'sellat-mcp-'));
+  await writeFile(join(dir, 'Factura Octubre.pdf'), 'x');
+  const { call, calls } = await connect({ env: {} });
+  const result = await call('sellat_find', { query: 'factura', folder: dir });
+  assert.match(result.text, new RegExp(`- ${join(dir, 'Factura Octubre.pdf')}`));
+  const none = await call('sellat_find', { query: 'nomina', folder: dir });
+  assert.match(none.text, /No file matching "nomina"/);
+  assert.equal(calls.length, 0);
+});
+
+test('an unexpanded ${user_config…} placeholder counts as no key', async () => {
+  const { call } = await connect({ env: { SELLAT_API_TOKEN: '${user_config.api_token}' } });
+  const result = await call('sellat_account');
+  assert.match(result.text, /No SELLAT API key configured/);
 });

@@ -1,6 +1,6 @@
 {
   "name": "sellat-mcp",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "MCP server for SELLAT: proof of existence from Claude, Cursor or any MCP client. Hashes locally — your files never leave your machine. Polygon, Bitcoin and the FNMT qualified eIDAS seal.",
   "type": "module",
   "bin": {
@@ -10,7 +10,8 @@
     ".": "./src/server.mjs"
   },
   "scripts": {
-    "test": "node --test"
+    "test": "node --test",
+    "bundle": "rm -f dist/sellat.mcpb && mkdir -p dist && npx -y @anthropic-ai/mcpb@2.1.2 pack . dist/sellat.mcpb"
   },
   "files": [
     "bin",
