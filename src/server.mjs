@@ -344,7 +344,7 @@ export function createSellatServer({ env: rawEnv = process.env, fetchImpl = fetc
         file_path: z.string().min(1).describe('Absolute path of the file to check.'),
         proof_path: z.string().optional().describe('Path to proof.json or to an evidence package (.zip).'),
         proof_id: z.string().optional().describe('A proof id, when there is no proof file at hand.'),
-        offline: z.boolean().optional().describe('Skip the blockchain check (math only). Default false.'),
+        offline: z.boolean().optional().describe('Skip the blockchain check (math only): proves no date. Default false.'),
       },
       annotations: { readOnlyHint: true, openWorldHint: true },
     },
@@ -380,11 +380,16 @@ export function createSellatServer({ env: rawEnv = process.env, fetchImpl = fetc
 
       const result = verifyProofOffline(proof, fileHash);
       const checks = [...result.checks];
+      // Times read from the chain. The proof's own block_timestamp is plain
+      // text anyone can edit, so it is never presented as proven (security
+      // audit 2026-10-06, F01).
+      const provenTimes = [];
       if (!offline) {
         for (const [i, anchor] of (proof.anchors ?? []).entries()) {
           try {
             const onChain = await checkAnchorOnChain(anchor, { fetchImpl });
             checks.push({ name: `anchor[${i}] on-chain`, ok: onChain.ok, detail: onChain.detail });
+            if (onChain.ok && onChain.blockTimestamp) provenTimes.push(onChain.blockTimestamp);
           } catch (error) {
             checks.push({ name: `anchor[${i}] on-chain`, ok: false, detail: String(error?.message ?? error) });
           }
@@ -394,14 +399,16 @@ export function createSellatServer({ env: rawEnv = process.env, fetchImpl = fetc
       const verified = checks.every((c) => c.ok);
       const matches = fileHash === proof?.content?.hash;
       const proofSound = checks.every((c) => c.ok || c.name === 'file matches proof');
-      const when = proof.anchors?.[0]?.block_timestamp;
+      const when = verified && !offline ? (provenTimes.sort()[0] ?? null) : null;
       const summary = verified
-        ? `VERIFIED${offline ? ' (offline: the blockchain was not consulted)' : ''}: this exact file existed no later than ${when ?? 'the anchored time'}.`
+        ? offline
+          ? 'CONSISTENT (offline): this exact file matches the proof and its math holds, but the blockchain was not consulted, so no date is proven. Verify again without offline to read the anchoring block\'s time from the chain.'
+          : `VERIFIED: this exact file existed no later than ${when}, the anchoring block's time as the chain states it.`
         : !matches
-          ? `NOT VERIFIED: this file is not the one the proof covers (its SHA-256 differs: even one changed byte changes it).${proofSound ? ` The proof itself is sound and anchored at ${when ?? 'its anchored time'}, for other bytes.` : ''}`
+          ? `NOT VERIFIED: this file is not the one the proof covers (its SHA-256 differs: even one changed byte changes it).${proofSound && !offline ? ' The proof itself is sound and anchored, for other bytes.' : ''}`
           : 'NOT VERIFIED: at least one check failed (see below). If only the on-chain check failed, the public node may be unreachable; retry later.';
       const lines = checks.map((c) => `${c.ok ? '✓' : '✗'} ${c.name}: ${c.detail}`);
-      return ok(`${summary}\n\n${lines.join('\n')}`, { verified, file_sha256: fileHash, proof_id: proof.proof_id, anchored_at: when ?? null });
+      return ok(`${summary}\n\n${lines.join('\n')}`, { verified: verified && !offline, consistent: verified, file_sha256: fileHash, proof_id: proof.proof_id, anchored_at: when });
     })
   );
 

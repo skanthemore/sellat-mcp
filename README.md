@@ -111,8 +111,10 @@ you asked for one.
 That these exact bytes existed no later than the anchored time, verifiable by
 anyone without trusting SELLAT. On its own it does not prove authorship or
 ownership. `sellat_verify` checks the file, the Merkle path and the Polygon
-anchor; it does not check the qualified seal's `.tsr` (any RFC 3161 tool
-does, e.g. `openssl ts -verify`).
+anchor, and reads the anchoring block's time from the chain — the only date
+it states as proven (a proof whose own date differs fails; `offline` checks
+the math and states no date). It does not check the qualified seal's `.tsr`
+(any RFC 3161 tool does, e.g. `openssl ts -verify`).
 
 ## Develop
 
