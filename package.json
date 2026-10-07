@@ -42,7 +42,7 @@
   "dependencies": {
     "@modelcontextprotocol/sdk": "^1.32.1",
     "sellat-cli": "^0.2.0",
-    "sellat-verify": "^0.1.1",
+    "sellat-verify": "^0.2.0",
     "zod": "^4.6.5"
   }
 }

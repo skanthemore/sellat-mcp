@@ -141,21 +141,25 @@ test('sellat_download saves without overwriting', async () => {
   assert.equal(calls[0].search, '?lang=es');
 });
 
-/** The example proof's Polygon transaction, as a node would return it. */
+/** The JSON a tool appends after its summary. */
+const data = (text) => JSON.parse(text.slice(text.lastIndexOf('\n\n{') + 2));
+
+/** The example proof's Polygon transaction and block, as a node would return them. */
 async function polygonNode() {
   const proof = JSON.parse(await readFile(EXAMPLE_PROOF, 'utf8'));
   const anchor = proof.anchors[0];
-  return () =>
-    json(200, {
-      jsonrpc: '2.0',
-      id: 1,
-      result: {
-        hash: anchor.tx_hash,
-        input: '0x' + Buffer.from(anchor.payload, 'utf8').toString('hex'),
-        blockNumber: '0x' + anchor.block_number.toString(16),
-        from: '0xsellat',
-      },
-    });
+  const blockNumber = '0x' + anchor.block_number.toString(16);
+  const results = {
+    eth_getTransactionByHash: {
+      hash: anchor.tx_hash,
+      input: '0x' + Buffer.from(anchor.payload, 'utf8').toString('hex'),
+      blockNumber,
+      from: '0xsellat',
+    },
+    // 2026-08-10T22:30:04Z, the block's own time.
+    eth_getBlockByNumber: { number: blockNumber, timestamp: '0x' + (1786401004).toString(16), transactions: [] },
+  };
+  return ({ init }) => json(200, { jsonrpc: '2.0', id: 1, result: results[JSON.parse(init.body).method] ?? null });
 }
 
 test('sellat_verify: proof.json, checked on-chain', async () => {
@@ -164,6 +168,32 @@ test('sellat_verify: proof.json, checked on-chain', async () => {
   assert.equal(result.isError, undefined);
   assert.match(result.text, /^VERIFIED: this exact file existed no later than 2026-08-10T22:30:04\.000Z/);
   assert.match(result.text, /✓ anchor\[0\] on-chain/);
+  assert.equal(data(result.text).anchored_at, '2026-08-10T22:30:04.000Z');
+});
+
+// Security audit 2026-10-06, F01: a real proof with only its date edited.
+test('sellat_verify: a proof whose date was edited is not verified, and the edited date is not repeated', async () => {
+  const dir = await mkdtemp(join(tmpdir(), 'sellat-mcp-'));
+  const edited = JSON.parse(await readFile(EXAMPLE_PROOF, 'utf8'));
+  edited.anchors[0].block_timestamp = '1970-01-01T00:00:00Z';
+  const proofPath = join(dir, 'edited.proof.json');
+  await writeFile(proofPath, JSON.stringify(edited));
+  const { call } = await connect({ env: {}, routes: { 'POST /': await polygonNode() } });
+  const result = await call('sellat_verify', { file_path: EXAMPLE_FILE, proof_path: proofPath });
+  assert.match(result.text, /^NOT VERIFIED/);
+  assert.match(result.text, /✗ anchor\[0\] on-chain: block \d+ is from 2026-08-10T22:30:04\.000Z, proof says 1970/);
+  assert.equal(data(result.text).verified, false);
+  assert.equal(data(result.text).anchored_at, null);
+});
+
+test('sellat_verify: offline proves no date', async () => {
+  const { call } = await connect({ env: {} });
+  const result = await call('sellat_verify', { file_path: EXAMPLE_FILE, proof_path: EXAMPLE_PROOF, offline: true });
+  assert.match(result.text, /^CONSISTENT \(offline\)/);
+  assert.doesNotMatch(result.text.split('\n')[0], /2026/);
+  assert.equal(data(result.text).verified, false);
+  assert.equal(data(result.text).consistent, true);
+  assert.equal(data(result.text).anchored_at, null);
 });
 
 test('sellat_verify: a different file is not verified', async () => {
@@ -208,7 +238,7 @@ test('sellat_verify: reads proof.json out of an evidence package', async () => {
   await writeFile(zip, zipWith('proof.json', await readFile(EXAMPLE_PROOF)));
   const { call } = await connect({ env: {} });
   const result = await call('sellat_verify', { file_path: EXAMPLE_FILE, proof_path: zip, offline: true });
-  assert.match(result.text, /^VERIFIED \(offline/);
+  assert.match(result.text, /^CONSISTENT \(offline\)/);
 });
 
 test('sellat_verify: by proof id, before the batch is anchored', async () => {
