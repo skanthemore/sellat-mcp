@@ -1,6 +1,7 @@
 # sellat-mcp
 
 [![tests](https://github.com/skanthemore/sellat-mcp/actions/workflows/tests.yml/badge.svg)](https://github.com/skanthemore/sellat-mcp/actions/workflows/tests.yml)
+[![M8ven Verified](https://m8ven.ai/badge/mcp/skanthemore/sellat-mcp?variant=verified)](https://m8ven.ai/mcp/skanthemore/sellat-mcp?s=readme)
 
 The official [MCP](https://modelcontextprotocol.io) server for [SELLAT](https://sellat.app):
 ask Claude, Cursor or any MCP client to protect a file, follow its proof,
