@@ -3,8 +3,8 @@
   "name": "sellat",
   "display_name": "Sellat",
   "version": "0.3.2",
-  "description": "Protect your files with independently verifiable proof of existence: Polygon, Bitcoin and the FNMT qualified eIDAS seal. Files are hashed on your computer and never uploaded.",
-  "long_description": "Ask Claude to protect a file (\"protect the contract I downloaded yesterday\"), follow its proof, add the qualified eIDAS seal from FNMT-RCM, download the certificate, or check a file against a proof.\n\nYour files never leave your computer: Sellat receives only their SHA-256 fingerprint, name and size. Verification runs locally against the public blockchain and does not trust Sellat.\n\nProtecting files is free within your account's daily budget. Nothing is ever paid through Claude: when a qualified seal needs a credit, you get the link to buy it on sellat.app.\n\nFinding and verifying files work without an account. To protect files, create a free account at sellat.app and an API key in your dashboard.",
+  "description": "Protect your files with independently verifiable proof of existence: Polygon, Bitcoin and the qualified eIDAS seal. Files are hashed on your computer and never uploaded.",
+  "long_description": "Ask Claude to protect a file (\"protect the contract I downloaded yesterday\"), follow its proof, add the qualified eIDAS seal, download the certificate, or check a file against a proof.\n\nYour files never leave your computer: Sellat receives only their SHA-256 fingerprint, name and size. Verification runs locally against the public blockchain and does not trust Sellat.\n\nProtecting files is free within your account's daily budget. Nothing is ever paid through Claude: when a qualified seal needs a credit, you get the link to buy it on sellat.app.\n\nFinding and verifying files work without an account. To protect files, create a free account at sellat.app and an API key in your dashboard.",
   "author": {
     "name": "Sellat",
     "url": "https://sellat.app"
@@ -35,7 +35,7 @@
     { "name": "sellat_stamp", "description": "Protect a file: hash it locally and create the proof" },
     { "name": "sellat_status", "description": "State of a proof: Polygon, Bitcoin, qualified seal" },
     { "name": "sellat_list", "description": "Your proofs, newest first" },
-    { "name": "sellat_seal", "description": "Add the FNMT-RCM qualified eIDAS timestamp (spends one seal)" },
+    { "name": "sellat_seal", "description": "Add the qualified eIDAS timestamp (spends one seal)" },
     { "name": "sellat_account", "description": "Plan, seals left and today's budget" },
     { "name": "sellat_download", "description": "Save the PDF certificate, evidence package or .tsr" },
     { "name": "sellat_verify", "description": "Check a file against a proof, without trusting Sellat" }
