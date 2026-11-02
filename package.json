@@ -1,6 +1,7 @@
 {
   "name": "sellat-mcp",
-  "version": "0.2.0",
+  "version": "0.3.2",
+  "mcpName": "io.github.skanthemore/sellat-mcp",
   "description": "MCP server for SELLAT: proof of existence from Claude, Cursor or any MCP client. Hashes locally — your files never leave your machine. Polygon, Bitcoin and the FNMT qualified eIDAS seal.",
   "type": "module",
   "bin": {
