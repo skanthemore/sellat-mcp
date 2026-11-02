@@ -8,7 +8,7 @@ import { cleanName, defaultDownloadDir, expandPath, freePath, mimeTypeFor, requi
 import { findFiles, userFolders } from './find.mjs';
 import { proofJsonFromZip } from './zip.mjs';
 
-export const VERSION = '0.3.1';
+export const VERSION = '0.3.2';
 
 const KEYS_URL = 'https://sellat.app/dashboard#api-keys';
 

@@ -2,7 +2,7 @@
   "manifest_version": "0.3",
   "name": "sellat",
   "display_name": "Sellat",
-  "version": "0.3.1",
+  "version": "0.3.2",
   "description": "Protect your files with independently verifiable proof of existence: Polygon, Bitcoin and the FNMT qualified eIDAS seal. Files are hashed on your computer and never uploaded.",
   "long_description": "Ask Claude to protect a file (\"protect the contract I downloaded yesterday\"), follow its proof, add the qualified eIDAS seal from FNMT-RCM, download the certificate, or check a file against a proof.\n\nYour files never leave your computer: Sellat receives only their SHA-256 fingerprint, name and size. Verification runs locally against the public blockchain and does not trust Sellat.\n\nProtecting files is free within your account's daily budget. Nothing is ever paid through Claude: when a qualified seal needs a credit, you get the link to buy it on sellat.app.\n\nFinding and verifying files work without an account. To protect files, create a free account at sellat.app and an API key in your dashboard.",
   "author": {

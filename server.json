@@ -1,0 +1,45 @@
+{
+  "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
+  "name": "io.github.skanthemore/sellat-mcp",
+  "title": "Sellat",
+  "description": "Proof of existence for files from any MCP client: hashed locally, anchored on Polygon and Bitcoin.",
+  "websiteUrl": "https://sellat.app/developers",
+  "repository": {
+    "url": "https://github.com/skanthemore/sellat-mcp",
+    "source": "github"
+  },
+  "version": "0.3.2",
+  "packages": [
+    {
+      "registryType": "npm",
+      "registryBaseUrl": "https://registry.npmjs.org",
+      "identifier": "sellat-mcp",
+      "version": "0.3.2",
+      "runtimeHint": "npx",
+      "transport": {
+        "type": "stdio"
+      },
+      "environmentVariables": [
+        {
+          "name": "SELLAT_API_TOKEN",
+          "description": "Your Sellat API key (sellat_…), from sellat.app → Dashboard → API",
+          "isRequired": true,
+          "isSecret": true,
+          "format": "string"
+        },
+        {
+          "name": "SELLAT_DOWNLOAD_DIR",
+          "description": "Where certificates and evidence packages are saved (default: the system's downloads folder)",
+          "isRequired": false,
+          "format": "filepath"
+        },
+        {
+          "name": "SELLAT_API_URL",
+          "description": "Another Sellat environment (default: https://sellat.app)",
+          "isRequired": false,
+          "format": "string"
+        }
+      ]
+    }
+  ]
+}
