@@ -79,10 +79,10 @@ gemini mcp add -e SELLAT_API_TOKEN=sellat_… sellat npx -y sellat-mcp
 | --- | --- | --- | --- |
 | `sellat_find` | find a file by name in Downloads, Desktop, Documents and Pictures (localized names included); names only, never contents | no | none |
 | `sellat_hash` | SHA-256 of a local file | no | none |
-| `sellat_stamp` | protect a file: hash locally, create the proof; `qualified: true` adds the FNMT seal | yes | SELLAT (hash only) |
+| `sellat_stamp` | protect a file: hash locally, create the proof; `qualified: true` adds the qualified eIDAS seal | yes | SELLAT (hash only) |
 | `sellat_status` | state of a proof: Polygon anchor, Bitcoin, seal, URLs | yes | SELLAT |
 | `sellat_list` | the account's proofs, newest first | yes | SELLAT |
-| `sellat_seal` | the FNMT-RCM qualified timestamp (eIDAS, RFC 3161) for an existing proof; spends one seal | yes | SELLAT |
+| `sellat_seal` | the qualified timestamp (eIDAS, RFC 3161) for an existing proof; spends one seal | yes | SELLAT |
 | `sellat_account` | plan, seals left, today's proof budget | yes | SELLAT |
 | `sellat_download` | save the PDF certificate, the evidence package (ZIP) or the seal's `.tsr`; never overwrites | yes | SELLAT |
 | `sellat_verify` | check a file against a `proof.json`, an evidence `.zip` or a proof id: Merkle path recomputed locally, anchor checked on a public Polygon node | no | public RPC (and SELLAT only to fetch a proof by id) |

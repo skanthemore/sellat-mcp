@@ -17,7 +17,7 @@ const INSTRUCTIONS = `SELLAT creates independently verifiable proof that an exac
 - Files are hashed on this machine. Only the SHA-256 goes to SELLAT; the file itself never leaves the computer.
 - The tools work on files saved on this computer. When the user names a file without a path ("the contract I downloaded yesterday"), call sellat_find first; if more than one file fits, ask which one. A file attached to the chat is not visible to these tools: ask where it is saved, or find it with sellat_find.
 - A new proof is anchored on Polygon in a Merkle batch: within minutes on the Pro account, at the end of a fixed four-hour UTC slot on the free account (the proof's "anchoring" field says which). Bitcoin (OpenTimestamps) confirms hours later. Do not promise an on-chain transaction in seconds; use sellat_status to follow it.
-- The qualified seal (FNMT-RCM, eIDAS, RFC 3161) is immediate, but it spends one seal from the account. Only request it when the user has explicitly asked for it in this conversation.
+- The qualified seal (eIDAS, RFC 3161) is immediate, but it spends one seal from the account. Only request it when the user has explicitly asked for it in this conversation.
 - Payments never happen here. When the account has no seals left the tools answer with a link to buy them on the web; give the user that link and wait for them to say they bought before trying again.
 - Verification (sellat_verify) is done locally against the public blockchain: it does not trust SELLAT's database.
 - A proof shows that the bytes existed at that time. It does not prove authorship or ownership by itself; do not claim more than that.`;
@@ -193,7 +193,7 @@ export function createSellatServer({ env: rawEnv = process.env, fetchImpl = fetc
         qualified: z
           .boolean()
           .optional()
-          .describe('Also issue the FNMT-RCM qualified timestamp (eIDAS). Spends one seal. Only if the user asked for it.'),
+          .describe('Also issue the qualified timestamp (eIDAS). Spends one seal. Only if the user asked for it.'),
       },
       annotations: { readOnlyHint: false, destructiveHint: false, idempotentHint: true, openWorldHint: true },
     },
@@ -265,7 +265,7 @@ export function createSellatServer({ env: rawEnv = process.env, fetchImpl = fetc
     {
       title: 'Add the qualified seal',
       description:
-        'Issue the FNMT-RCM qualified electronic timestamp (eIDAS, RFC 3161) for an existing proof. Spends one seal from the account: call it only when the user explicitly asked for it. With no seals left it returns the link to buy them on the web. Calling it again on a sealed proof returns the existing seal without spending another.',
+        'Issue the qualified electronic timestamp (eIDAS, RFC 3161) for an existing proof. Spends one seal from the account: call it only when the user explicitly asked for it. With no seals left it returns the link to buy them on the web. Calling it again on a sealed proof returns the existing seal without spending another.',
       inputSchema: { proof_id: proofId },
       annotations: { readOnlyHint: false, destructiveHint: false, idempotentHint: true, openWorldHint: true },
     },

@@ -118,11 +118,11 @@ test('sellat_seal reports the issued seal', async () => {
   const { call } = await connect({
     routes: {
       'POST /api/v2/proofs/p-1/qualified': () =>
-        json(200, { proof_id: 'p-1', created: true, qualified: { state: 'issued', authority: 'FNMT-RCM', time: '2026-10-05T10:00:01Z' }, seals_remaining: 2 }),
+        json(200, { proof_id: 'p-1', created: true, qualified: { state: 'issued', authority: 'Example TSA', time: '2026-10-05T10:00:01Z' }, seals_remaining: 2 }),
     },
   });
   const result = await call('sellat_seal', { proof_id: 'p-1' });
-  assert.match(result.text, /Qualified seal issued: FNMT-RCM, 2026-10-05T10:00:01Z\. Seals left: 2\./);
+  assert.match(result.text, /Qualified seal issued: Example TSA, 2026-10-05T10:00:01Z\. Seals left: 2\./);
 });
 
 test('sellat_download saves without overwriting', async () => {
